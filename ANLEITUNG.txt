@@ -1,0 +1,15 @@
+BIERKASSE – OFFLINE-APP
+
+Einmal online stellen, danach läuft das Spiel auf dem Handy ohne Internet.
+
+1. Auf github.com ein neues öffentliches Repository anlegen, z. B. "bier-blackjack".
+2. Alle Dateien aus diesem Ordner hochladen ("Add file" > "Upload files").
+3. Settings > Pages > Branch "main" auswählen > Save.
+4. Nach ca. 1 Minute: https://DEINNAME.github.io/bier-blackjack im Handy-Browser öffnen.
+5. Einmal komplett laden lassen, dann:
+   iPhone:  Safari > Teilen > "Zum Home-Bildschirm"
+   Android: Chrome > ⋮ > "App installieren"
+6. Fertig. Ab jetzt startet das Spiel vom Homescreen, auch im Flugmodus.
+
+Der Spielstand wird auf dem Handy gespeichert.
+Updates: Dateien auf GitHub ersetzen und in sw.js die Versionsnummer (bierjack-v2 -> v3) erhöhen.
