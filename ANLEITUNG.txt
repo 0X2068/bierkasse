@@ -12,4 +12,4 @@ Einmal online stellen, danach läuft das Spiel auf dem Handy ohne Internet.
 6. Fertig. Ab jetzt startet das Spiel vom Homescreen, auch im Flugmodus.
 
 Der Spielstand wird auf dem Handy gespeichert.
-Updates: Dateien auf GitHub ersetzen und in sw.js die Versionsnummer (bierjack-v2 -> v3) erhöhen.
+Updates: Dateien auf GitHub ersetzen und in sw.js die Versionsnummer (z. B. bierjack-v3 -> v4) erhöhen.

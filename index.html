@@ -13,9 +13,6 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Bierkasse – Trinkspiele</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bodoni+Moda:ital,opsz,wght@0,6..96,700;1,6..96,500&family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ---------- Tokens: Kneipe (Standard für Bier und Bierkasse) ---------- */
 :root{
@@ -27,9 +24,17 @@
   --panel:rgba(0,0,0,.28); --panel-strong:rgba(0,0,0,.46);
   --win:#a6e9b2; --lose:#ffab9c; --push:#ece0ad;
   --bar:#170d06; --coaster:#f3e7cc; --coaster-ink:#5a3518;
-  --display:'Alfa Slab One', 'Rockwell', 'Roboto Slab', Georgia, serif;
-  --serif:'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
-  --sans:'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display:ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --serif:ui-serif, 'New York', 'Iowan Old Style', Georgia, serif;
+  --sans:-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Federkurven (aus Apple-Federn berechnet: damping/response) */
+  --spring:linear(0, 0.065, 0.2, 0.346, 0.483, 0.601, 0.699, 0.774, 0.833, 0.878, 0.911, 0.935, 0.953, 0.967, 0.976, 0.983, 0.988, 0.992, 0.994, 0.996, 0.997, 0.998, 0.999, 0.999, 1);
+  --spring-d:615ms;
+  --bounce:linear(0, 0.041, 0.13, 0.247, 0.368, 0.49, 0.598, 0.695, 0.775, 0.841, 0.894, 0.933, 0.962, 0.983, 0.997, 1.006, 1.011, 1.014, 1.015, 1.014, 1.013, 1.011, 1.009, 1.007, 1.006, 1.004, 1.003, 1.002, 1.002, 1.001, 1.001, 1, 1);
+  --bounce-d:520ms;
+  --hair:rgba(255,255,255,.10); --hair-hi:rgba(255,255,255,.16);
+  --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.16);
+  --material:rgba(23,13,6,.62);
   --planks:repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 52px);
   color-scheme:dark;
 }
@@ -39,6 +44,7 @@
   --back1:#7a1c23; --back2:#a3323a; --display:var(--serif);
   --panel:rgba(0,0,0,.18); --panel-strong:rgba(0,0,0,.32);
   --planks:none; --ink:#f5f0e2; --muted:rgba(245,240,226,.70);
+  --material:rgba(12,42,29,.62);
 }
 @media (prefers-color-scheme: light){
   :root[data-mode="casino"]:not([data-theme="dark"]){ --felt:#2a8058; --felt-deep:#14462f; }
@@ -315,11 +321,147 @@ details[open] summary::after{ content:"−"; }
 .sheet li{ margin-bottom:5px; }
 .stack{ display:flex; flex-direction:column; gap:8px; }
 
+/* =====================================================================
+   Apple-Schicht: Systemschrift, Glas, Federn, sofortiges Feedback
+   ===================================================================== */
+body{ font-size:17px; line-height:1.4; letter-spacing:-.01em; -webkit-font-smoothing:antialiased; }
+
+/* Typografie: Gewicht statt Effekt, Laufweite je nach Größe */
+.logo,.brand h1,.betamt,.vbadge,.sip,.who .big,.sval,.bgcount,.question,.mode b,.sheet h2,
+.buscount b,.slot,.wres span,.arc .big,#toast{ font-weight:800; }
+.brand h1{ font-weight:800; letter-spacing:-.035em; line-height:1; }
+.logo{ font-size:1.18rem; letter-spacing:-.02em; }
+.sheet h2,.panel h2{ font-size:1.08rem; letter-spacing:-.015em; }
+.mode b{ font-size:1.1rem; letter-spacing:-.015em; }
+.betamt,.bgcount,.question{ letter-spacing:-.03em; }
+.sval,.who .big,.betamt,.bgcount,.stat,.vbadge,.buscount b{ font-variant-numeric:tabular-nums; }
+.pname{ font-weight:700; letter-spacing:-.02em; }
+.hint,.sub,.water,.top .info,.field > span{ letter-spacing:0; }
+.arc .big{ font-size:18px; letter-spacing:-.01em; }
+:root[data-mode="casino"] .logo,:root[data-mode="casino"] .brand h1{ font-weight:700; letter-spacing:-.01em; }
+
+/* Druck-Feedback: sofort beim Antippen, Feder beim Loslassen */
+button{ transition:transform var(--bounce-d) var(--bounce), background-color .25s ease, border-color .25s ease, color .25s ease, opacity .25s ease, box-shadow .25s ease; will-change:transform; }
+button:active:not(:disabled){ transform:scale(.95); transition:transform 90ms ease-out, background-color 90ms, opacity 90ms; }
+.act:active:not(:disabled),.primary:active:not(:disabled),.secondary:active:not(:disabled){ transform:scale(.97); }
+.bc:active:not(:disabled){ transform:scale(.92); }
+.primary:active:not(:disabled){ filter:brightness(.92); }
+
+/* Knöpfe im iOS-Stil */
+.primary{ border-radius:16px; padding:16px 18px; font-weight:650; font-size:1.06rem; letter-spacing:-.015em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 6px 18px -8px rgba(244,182,60,.55); }
+.secondary{ border:none; background:var(--fill); border-radius:16px; font-weight:600; letter-spacing:-.01em; }
+.secondary.armed{ background:rgba(255,95,80,.18); border:none; }
+.ghost{ border:none; background:var(--fill); padding:7px 14px; font-weight:600; font-size:.92rem; }
+.mini{ border:none; background:var(--fill-2); border-radius:999px; padding:7px 12px; font-size:.84rem; color:var(--ink); opacity:.92; }
+.mini.armed{ background:rgba(255,95,80,.2); color:var(--lose); }
+.act{ border:none; background:var(--fill); border-radius:16px; font-weight:650; font-size:.95rem; letter-spacing:-.01em; }
+.act.hit{ box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
+.sbtn{ border:none; background:var(--fill); }
+
+/* Eingabefelder */
+input[type=text]{ border:none; background:var(--fill-2); border-radius:12px; padding:12px 14px; box-shadow:inset 0 0 0 .5px var(--hair); transition:box-shadow .2s; }
+input[type=text]:focus{ outline:none; box-shadow:inset 0 0 0 2px var(--brass); }
+
+/* Gruppierte Flächen mit feiner Lichtkante */
+.panel,.seat,.rlres,.buscount > div,.drow{ box-shadow:inset 0 0 0 .5px var(--hair); }
+.panel{ border-radius:22px; padding:16px; }
+.seat{ border-radius:22px; border:none; transition:background-color .3s ease, box-shadow .35s ease, opacity .3s ease, transform var(--spring-d) var(--spring); }
+.seat.active{ box-shadow:inset 0 0 0 2px var(--brass), 0 10px 28px -12px rgba(244,182,60,.45); }
+.hand{ border-radius:14px; transition:background-color .3s, border-color .3s; }
+.mode{ border:none; background:var(--fill-2); border-radius:18px; box-shadow:inset 0 0 0 .5px var(--hair); transition:transform var(--bounce-d) var(--bounce), background-color .25s, box-shadow .25s; }
+.mode.on{ background:rgba(244,182,60,.14); box-shadow:inset 0 0 0 2px var(--brass); }
+.drow{ border-radius:14px; background:var(--fill-2); }
+.vbadge{ border:none; background:rgba(0,0,0,.34); box-shadow:inset 0 0 0 .5px var(--hair-hi); }
+.vbadge.bust{ box-shadow:inset 0 0 0 1.5px var(--lose); } .vbadge.bj{ box-shadow:inset 0 0 0 1.5px var(--win); }
+.hand.turn .vbadge{ box-shadow:none; }
+.card{ border-radius:calc(var(--cw) * .12); box-shadow:0 1px 1px rgba(0,0,0,.25), 0 4px 10px -2px rgba(0,0,0,.45); }
+
+/* Segmentierte Auswahl mit gleitendem Daumen */
+.seg{ background:var(--fill); border-radius:11px; padding:2px; gap:0; position:relative; }
+.seg button{ position:relative; z-index:0; border-radius:9px; padding:8px 6px; font-weight:600; font-size:.88rem; color:var(--ink); opacity:.75; transition:opacity .2s, color .2s; }
+.seg button:active:not(:disabled){ transform:none; opacity:.5; }
+.seg button.on{ background:transparent; color:var(--brass-ink); font-weight:700; opacity:1; }
+.seg button.on::before{ content:''; position:absolute; inset:0; z-index:-1; border-radius:9px; background:var(--brass);
+  box-shadow:0 3px 8px rgba(0,0,0,.18), 0 3px 1px rgba(0,0,0,.04), inset 0 .5px 0 rgba(255,255,255,.4); transform-origin:left center; }
+
+/* Aufklapper mit Chevron */
+details summary{ font-weight:700; align-items:center; }
+details summary::after{ content:''; width:9px; height:9px; border-right:2.2px solid var(--brass); border-bottom:2.2px solid var(--brass);
+  transform:rotate(-45deg); transition:transform var(--spring-d) var(--spring); margin-right:4px; }
+details[open] summary::after{ content:''; transform:rotate(45deg) translate(-2px,-2px); }
+
+/* Kopfzeile: schwebendes Glas, Inhalt läuft darunter durch */
+.wrap{ padding-top:0; }
+.top{
+  position:sticky; top:0; z-index:8;
+  margin:calc(-1 * env(safe-area-inset-top,0px)) -14px 4px;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;
+  background:var(--material);
+  -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%);
+}
+.top::after{ content:''; position:absolute; left:0; right:0; top:100%; height:14px; pointer-events:none;
+  background:linear-gradient(var(--material), transparent); opacity:.6; }
+
+/* Aktionsleiste unten: Glas mit Lichtkante statt Balken */
+.bar{
+  background:var(--material); border-top:none;
+  -webkit-backdrop-filter:blur(30px) saturate(180%); backdrop-filter:blur(30px) saturate(180%);
+  box-shadow:inset 0 .5px 0 var(--hair-hi), 0 -12px 30px -18px rgba(0,0,0,.6);
+  border-radius:24px 24px 0 0;
+}
+
+/* Toast: Material, das erscheint, statt nur einzublenden */
+#toast{
+  background:var(--material); border:none; border-radius:26px;
+  -webkit-backdrop-filter:blur(30px) saturate(180%); backdrop-filter:blur(30px) saturate(180%);
+  box-shadow:inset 0 0 0 1.5px var(--brass), 0 20px 50px -12px rgba(0,0,0,.6);
+  font-size:1.35rem; letter-spacing:-.025em; padding:16px 24px;
+  transform:translate(-50%,-50%) scale(.86); filter:blur(6px);
+  transition:opacity .22s ease, transform .3s ease-in, filter .25s ease;
+}
+#toast.show{ transform:translate(-50%,-50%) scale(1); filter:none; transition:opacity .18s ease, transform var(--bounce-d) var(--bounce), filter .25s ease; }
+#toast.good{ border:none; box-shadow:inset 0 0 0 1.5px var(--win), 0 20px 50px -12px rgba(0,0,0,.6); }
+#toast.bad{ border:none; box-shadow:inset 0 0 0 1.5px var(--lose), 0 20px 50px -12px rgba(0,0,0,.6); }
+#toast small{ letter-spacing:0; }
+
+/* Karten fliegen mit Schwung, Bierglas füllt sich weich */
+.card.deal{ animation:deal var(--bounce-d) var(--bounce) both; }
+.card.flip{ animation:flip .45s var(--spring) both; }
+#liq{ transition:transform 1.1s var(--spring); }
+
+/* Bottom-Sheet: wird per Feder geführt und lässt sich nach unten wegwischen */
+.scrim{ background:rgba(0,0,0,.42); }
+.sheet{
+  position:relative; border:none; border-radius:28px 28px 0 0;
+  background:var(--material);
+  -webkit-backdrop-filter:blur(40px) saturate(180%); backdrop-filter:blur(40px) saturate(180%);
+  box-shadow:inset 0 .5px 0 var(--hair-hi), 0 -20px 60px -20px rgba(0,0,0,.7);
+  padding-top:8px; overscroll-behavior:contain; will-change:transform;
+}
+.grab{ position:sticky; top:-8px; margin:-8px -16px 6px; padding:10px 0 12px; display:flex; justify-content:center; touch-action:none; cursor:grab; z-index:1; }
+.grab::before{ content:''; width:38px; height:5px; border-radius:3px; background:rgba(255,255,255,.32); }
+.sheet .stack{ gap:10px; }
+
+/* Ältere Browser ohne linear(): einfache Kurven als Ersatz */
+@supports not (animation-timing-function: linear(0, 1)){
+  :root{ --spring:cubic-bezier(.25,.8,.3,1); --bounce:cubic-bezier(.3,1.3,.45,1); }
+}
+
+/* Barrierefreiheit */
 @media (prefers-reduced-motion: reduce){
   .card.deal,.card.flip{ animation:none; }
   .bub{ display:none; }
   #liq{ transition:none; }
-  #toast{ transition:opacity .15s; transform:translate(-50%,-50%); }
+  #toast,#toast.show{ transition:opacity .15s; transform:translate(-50%,-50%); filter:none; }
+  button,button:active:not(:disabled),.seat,.mode,details summary::after{ transition-property:opacity, background-color, color, box-shadow; transform:none; }
+}
+@media (prefers-reduced-transparency: reduce){
+  .top,.bar,.sheet,#toast{ background:var(--bar); -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+@media (prefers-contrast: more){
+  :root{ --hair:rgba(255,255,255,.4); --hair-hi:rgba(255,255,255,.55); --muted:rgba(251,241,219,.9); }
+  .top,.bar,.sheet{ background:var(--bar); }
 }
 </style>
 </head>
@@ -391,6 +533,95 @@ function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} 
 function load(){ try{ const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
 function wipe(){ try{ localStorage.removeItem(KEY); }catch(e){} }
 function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+
+/* ---------- Federn (wie bei Apple: damping + response) ---------- */
+const RM = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+function Spring(x, onUpdate){ this.x = x; this.v = 0; this.on = onUpdate; this.raf = 0; }
+Spring.prototype.to = function(target, o, done){
+  cancelAnimationFrame(this.raf);
+  const w = 2 * Math.PI / (o.response || .4), k = w * w, c = 2 * (o.damping == null ? 1 : o.damping) * w;
+  if(o.velocity != null) this.v = o.velocity;
+  let last = performance.now();
+  const step = now => {
+    const dt = Math.min(.064, Math.max(0, now - last) / 1000); last = now;
+    const n = Math.max(1, Math.ceil(dt * 240)), h = dt / n;
+    for(let i = 0; i < n; i++){ const a = -k * (this.x - target) - c * this.v; this.v += a * h; this.x += this.v * h; }
+    if(Math.abs(this.v) < 3 && Math.abs(this.x - target) < .4){
+      this.x = target; this.v = 0; this.raf = 0; this.on(this.x); if(done) done(); return;
+    }
+    this.on(this.x); this.raf = requestAnimationFrame(step);
+  };
+  this.raf = requestAnimationFrame(step);
+};
+Spring.prototype.stop = function(){ cancelAnimationFrame(this.raf); this.raf = 0; };
+Spring.prototype.set = function(x){ this.stop(); this.x = x; this.v = 0; this.on(x); };
+const project = (v, d = .998) => (v / 1000) * d / (1 - d);
+const rubber = (o, dim, c = .55) => (o * dim * c) / (dim + c * Math.abs(o));
+function anim(el, kf, opts){
+  try{ return el.animate(kf, opts); }
+  catch(e){ try{ return el.animate(kf, Object.assign({}, opts, { easing:'cubic-bezier(.3,1.3,.45,1)' })); }catch(e2){ return null; } }
+}
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- Bottom-Sheet: Feder, Ziehen, Wegwischen ---------- */
+const sheetCtl = { spring:null, h:1, drag:null };
+function sheetEls(){ return [app.querySelector('.scrim'), app.querySelector('.sheet')]; }
+function sheetApply(y){
+  const [scrim, sh] = sheetEls(); if(!sh) return;
+  sh.style.transform = 'translate3d(0,' + y + 'px,0)';
+  const p = Math.max(0, Math.min(1, 1 - y / sheetCtl.h));
+  scrim.style.backgroundColor = 'rgba(0,0,0,' + (.42 * p).toFixed(3) + ')';
+}
+function openSheet(){
+  const sh = sheetEls()[1]; if(!sh) return;
+  sheetCtl.h = sh.offsetHeight || 1;
+  if(!sheetCtl.spring) sheetCtl.spring = new Spring(sheetCtl.h, sheetApply);
+  if(RM()){ sheetCtl.spring.set(0); anim(sh, [{ opacity:0 }, { opacity:1 }], { duration:200 }); return; }
+  sheetCtl.spring.set(sheetCtl.h);
+  sheetCtl.spring.to(0, { damping:1, response:.38 });
+}
+function closeSheet(v){
+  const sh = sheetEls()[1];
+  const fin = () => { ui.menu = false; if(ui.armed === 'newgame') ui.armed = null; render(); };
+  if(!sh || !sheetCtl.spring){ fin(); return; }
+  sheetCtl.h = sh.offsetHeight || 1;
+  if(RM()){ const a = anim(sh, [{ opacity:1 }, { opacity:0 }], { duration:160, fill:'forwards' }); if(a) a.onfinish = fin; else fin(); return; }
+  sheetCtl.spring.to(sheetCtl.h + 24, { damping:1, response:.3, velocity:Math.max(0, v || 0) }, fin);
+}
+function dragStart(y, target){
+  const sh = sheetEls()[1]; if(!sh || !sheetCtl.spring) return;
+  const onGrab = !!target.closest('.grab');
+  if(!onGrab && sh.scrollTop > 0) return;
+  sheetCtl.h = sh.offsetHeight || 1;
+  sheetCtl.drag = { y0:y, x0:sheetCtl.spring.x, onGrab, live:false, hist:[[y, performance.now()]] };
+}
+function dragMove(y, e){
+  const d = sheetCtl.drag; if(!d) return;
+  const sh = sheetEls()[1]; if(!sh){ sheetCtl.drag = null; return; }
+  const dy = y - d.y0;
+  if(!d.live){
+    if(!d.onGrab && (dy < 0 || sh.scrollTop > 0)){ sheetCtl.drag = null; return; }  // normal scrollen lassen
+    if(e && e.cancelable) e.preventDefault();
+    if(Math.abs(dy) < 10) return;                                                  // kleine Schwelle gegen Fehlgriffe
+    d.live = true; d.y0 = y; sheetCtl.spring.stop(); d.x0 = sheetCtl.spring.x;
+  }
+  if(e && e.cancelable) e.preventDefault();
+  let nx = d.x0 + (y - d.y0);
+  if(nx < 0) nx = rubber(nx, sheetCtl.h);                                         // nach oben: Gummiband
+  sheetCtl.spring.x = nx; sheetApply(nx);
+  const now = performance.now();
+  d.hist.push([y, now]); while(d.hist.length > 2 && now - d.hist[0][1] > 100) d.hist.shift();
+}
+function dragEnd(){
+  const d = sheetCtl.drag; sheetCtl.drag = null;
+  if(!d || !d.live) return;
+  ui.suppressUntil = Date.now() + 400;
+  const a = d.hist[0], b = d.hist[d.hist.length - 1];
+  const v = b[1] - a[1] > 0 ? (b[0] - a[0]) / ((b[1] - a[1]) / 1000) : 0;
+  const end = sheetCtl.spring.x + project(v);                                      // wohin der Wurf führt
+  if(end > sheetCtl.h * .5 && v > -80) closeSheet(v);
+  else sheetCtl.spring.to(0, { damping:Math.abs(v) > 300 ? .8 : 1, response:.3, velocity:v });
+}
 
 const mode = () => S ? S.rules.mode : setup.mode;
 const isCasino = () => mode() === 'casino';
@@ -598,9 +829,10 @@ function drinkUp(p, d, s){
   p.drunk += d; p.shots += s;
   p.glass = (p.glass || 0) + d;
   if(p.glass >= 6){
+    const n = Math.floor(p.glass / 6);
     p.glass = p.glass % 6;
-    p.beerNo = (p.beerNo || 1) + 1;
-    toast('Bier leer!', 'good', p.name + ' braucht Nachschub', 1700);
+    p.beerNo = (p.beerNo || 1) + n;
+    toast(n > 1 ? n + ' Biere leer!' : 'Bier leer!', 'good', p.name + ' braucht Nachschub', 1700);
     buzz([40, 60, 40]);
   }
 }
@@ -720,7 +952,9 @@ function distRandom(){
 
 function nextRound(){
   for(const p of S.players){
+    const played = p.hands.length > 0;
     p.hands = []; p.ins = 0; p.recv = []; p.r = null;
+    if(!isCasino() && !played && !p.bet) continue;   // wer ausgesetzt hat, bleibt draußen, bis er wieder setzt
     p.bet = (p.lastBet && canAfford(p, p.lastBet)) ? p.lastBet : (isCasino() ? 0 : 1);
   }
   S.dealer = []; S.note = ''; S.turn = null; S.dist = null; S.phase = 'bet';
@@ -858,6 +1092,7 @@ function outcomeHTML(p){
 }
 
 function rmBtn(p, pi){
+  if(S.give || (S.dist && S.distIdx < S.dist.length)) return '';
   const armed = ui.armed === 'rm' + p.id;
   return '<button class="mini' + (armed ? ' armed' : '') + '" data-act="rm" data-p="' + pi + '">' + (armed ? 'Wirklich gehen?' : 'Aufstehen') + '</button>';
 }
@@ -881,7 +1116,7 @@ function betSeat(p, pi){
       (p.bet ? (p.bet === 1 ? 'Schluck' : 'Schlücke') + (p.bet === 6 ? ', ein ganzes Bier' : ' Einsatz') : 'Setzt aus') + '</small></div></div>' +
       sipButtons(p, pi) +
       '<div class="betrow"><button class="mini" data-act="clear" data-p="' + pi + '">Aussetzen</button>' +
-      (isKasse() && p.konto > 0 ? '<button class="mini throw" data-act="throw" data-p="' + pi + '">Runde schmeißen</button>' : '') +
+      throwBtn(p, pi) +
       '<button class="mini' + (ui.armed === 'nb' + p.id ? ' armed' : '') + '" data-act="newbeer" data-p="' + pi + '">' +
         (ui.armed === 'nb' + p.id ? 'Bier wirklich leer? (' + sipTxt(6 - (p.glass || 0)) + ')' : 'Neues Bier anfangen') + '</button>' +
       '<span style="flex:1"></span>' + rmBtn(p, pi) + '</div>';
@@ -1049,7 +1284,7 @@ function menuSheet(){
       '<li>Android: In Chrome oben rechts auf ⋮ tippen, dann „Zum Startbildschirm hinzufügen“.</li>' +
       '<li>Der Spielstand bleibt auf dem Handy gespeichert.</li></ul>';
   }
-  return '<div class="scrim" data-act="closeMenu"><div class="sheet" data-stop="1">' + rules + install +
+  return '<div class="scrim" data-act="closeMenu"><div class="sheet" data-stop="1" role="dialog" aria-modal="true" aria-label="Menü"><div class="grab" aria-hidden="true"></div>' + rules + install +
     '<div class="stack"><button class="secondary" data-act="closeMenu">Zurück zum Tisch</button>' +
     '<button class="secondary' + (armed ? ' armed' : '') + '" data-act="newgame">' + (armed ? 'Spielstand geht verloren. Nochmal tippen.' : 'Neues Spiel') + '</button></div></div></div>';
 }
@@ -1075,7 +1310,28 @@ function render(){
   const sl = oldStrip ? oldStrip.scrollLeft : 0;
   const det = app.querySelector('details');
   const detOpen = det ? det.open : false;
+  const oldSheet = app.querySelector('.sheet');
+  const sheetTop = oldSheet ? oldSheet.scrollTop : 0;
+  const segRects = [...app.querySelectorAll('.seg')].map(s => { const on = s.querySelector('button.on'); return on ? on.getBoundingClientRect() : null; });
   app.innerHTML = S ? viewTable() : viewSetup();
+  if(ui.menu){
+    const sh = app.querySelector('.sheet');
+    if(sh && oldSheet) sh.scrollTop = sheetTop;
+    if(ui.sheetIn){ ui.sheetIn = false; openSheet(); }
+    else if(sheetCtl.spring) sheetApply(sheetCtl.spring.x);
+  }
+  if(!RM()){
+    const ease = cssVar('--bounce') || 'ease-out';
+    app.querySelectorAll('.seg').forEach((s, i) => {
+      const on = s.querySelector('button.on'), old = segRects[i];
+      if(!on || !old) return;
+      const r = on.getBoundingClientRect();
+      const dx = old.left - r.left;
+      if(Math.abs(dx) < 1 || Math.abs(old.top - r.top) > 2 || !r.width) return;
+      anim(on, [{ transform:'translateX(' + dx + 'px) scaleX(' + (old.width / r.width) + ')' }, { transform:'none' }],
+        { duration:520, easing:ease, pseudoElement:'::before' });
+    });
+  }
   const strip = app.querySelector('.seats');
   const phaseKey = S ? S.phase + S.round : '';
   if(strip && ui.lastPhase === phaseKey) strip.scrollLeft = sl;
@@ -1108,7 +1364,7 @@ const GAMES = {
   hilo:     { name:'Höher oder Tiefer', logo:'Höher oder Tiefer', short:'Reihum die nächste Karte raten',
     hint:'Reihum rät jeder, ob die nächste Karte höher oder tiefer ist. Richtig: Der Stapel wächst, der Nächste ist dran. Falsch: so viele Schlücke, wie Karten im Stapel liegen, höchstens 6. Wer „Gleich“ trifft, gewinnt den doppelten Stapel.' },
   bus:      { name:'Busfahrer', logo:'Busfahrer', short:'Karten, Pyramide, Busfahrt',
-    hint:'Erst bekommt jeder vier Karten über vier Fragen. Dann wird die Pyramide aufgedeckt: Wer passende Karten hat, legt ab und trinkt oder verteilt, je nach Reihe. Wer am Ende die meisten Karten hat, fährt allein Bus, bis er raus ist, ein Bier im Bus getrunken hat oder das Deck durch ist.' }
+    hint:'Erst bekommt jeder vier Karten über vier Fragen. Dann wird die Pyramide aufgedeckt: Wer passende Karten hat, legt ab und trinkt oder verteilt, je nach Reihe. Wer am Ende die meisten Karten hat, fährt allein Bus, bis er raus ist, 10 Schlücke im Bus getrunken hat oder das Deck durch ist.' }
 };
 const GAME_ORDER = ['blackjack','roulette','hilo','bus'];
 const game = () => S ? (S.game || 'blackjack') : setup.game;
@@ -1393,6 +1649,7 @@ function hlGuess(g){
   const H = hlState();
   if(distPending()) return;
   const i = H.turn, p = S.players[i];
+  if((g === 'hi' && H.card.r === 'A') || (g === 'lo' && H.card.r === '2')) return;
   for(const q of S.players) q.recv = [];
   const old = H.card, c = freshCard();
   const a = rk(old), b = rk(c);
@@ -1432,7 +1689,7 @@ function viewHilo(){
   else {
     const p = S.players[H.turn];
     bar = '<div class="who"><span><b>' + esc(p.name) + '</b> ist dran</span><span>Karte: <b>' + H.card.r + '</b></span></div>' +
-      '<div class="acts n3"><button class="act hit" data-act="hl" data-v="hi">Höher</button><button class="act" data-act="hl" data-v="eq">Gleich</button><button class="act hit" data-act="hl" data-v="lo">Tiefer</button></div>';
+      '<div class="acts n3"><button class="act hit" data-act="hl" data-v="hi"' + (H.card.r === 'A' ? ' disabled' : '') + '>Höher</button><button class="act" data-act="hl" data-v="eq">Gleich</button><button class="act hit" data-act="hl" data-v="lo"' + (H.card.r === '2' ? ' disabled' : '') + '>Tiefer</button></div>';
   }
   return { h, bar };
 }
@@ -1446,7 +1703,7 @@ const BUS_Q = [
 ];
 const PYR_ROWS = [4, 3, 2, 1];
 const BUS_BEER = 10;
-const PYR_GIVE = [false, true, false, false];
+const PYR_GIVE = [false, true, false, true];
 const pyrWord = r => PYR_GIVE[r] ? 'verteilen' : 'trinken';
 function makeDeck(){
   const d = [];
@@ -1475,6 +1732,7 @@ function busDeal(v){
   const B = busState();
   if(B.phase !== 'deal' || distPending()) return;
   const i = B.turn, p = S.players[i], hand = B.hands[i], step = hand.length;
+  if(busImpossible(step, v, hand)) return;
   const c = B.deck.pop(), ok = busJudge(step, v, hand, c), n = 1;
   hand.push(c);
   for(const q of S.players) q.recv = [];
@@ -1557,6 +1815,7 @@ function busRide(v){
   const B = busState();
   if(B.phase !== 'ride' || distPending()) return;
   const Rd = B.ride, i = B.driver, p = S.players[i];
+  if(busImpossible(Rd.cards.length, v, Rd.cards)) return;
   const step = Rd.cards.length, c = Rd.deck.pop(), ok = busJudge(step, v, Rd.cards, c);
   Rd.cards.push(c);
   for(const q of S.players) q.recv = [];
@@ -1583,10 +1842,10 @@ function busEnd(made, why){
   B.phase = 'end'; B.made = made; B.why = made ? 'made' : (why || 'deck');
   for(const q of S.players) q.gr = null;
   const p = S.players[B.driver];
-  toast(made ? 'Raus aus dem Bus!' : B.why === 'beer' ? 'Ein Bier im Bus!' : 'Deck durch!', 'good', p.name + (made ? ' hat es geschafft' : ' ist erlöst'), 1900);
+  toast(made ? 'Raus aus dem Bus!' : B.why === 'beer' ? BUS_BEER + ' Schlücke im Bus!' : 'Deck durch!', 'good', p.name + (made ? ' hat es geschafft' : ' ist erlöst'), 1900);
 }
 function busCounter(Rd){
-  const sips = Rd.sips || 0, beers = sips / BUS_BEER;
+  const sips = Rd.sips || 0, beers = sips / 6;
   return '<div class="buscount"><div><b>' + sips + '</b><span>' + (sips === 1 ? 'Schluck' : 'Schlücke') + ' im Bus</span></div>' +
     '<div><b>' + fmt(Math.round(beers * 10) / 10) + '</b><span>Bier</span></div>' +
     '<div><b>' + Rd.tries + '</b><span>' + (Rd.tries === 1 ? 'Versuch' : 'Versuche') + '</span></div></div>' +
@@ -1598,10 +1857,15 @@ function handMini(cards){
 function slotsHTML(cards, faded){
   return '<div class="busrow' + (faded ? ' faded' : '') + '">' + [0,1,2,3].map(k => cards[k] ? '<div class="cards">' + cardHTML(cards[k], false) + '</div>' : '<div class="slot">' + (k + 1) + '</div>').join('') + '</div>';
 }
-function answerBar(name, step, act, label){
+function busImpossible(step, v, cards){
+  if(step === 1) return (v === 'hi' && cards[0].r === 'A') || (v === 'lo' && cards[0].r === '2');
+  if(step === 2 && v === 'in') return Math.abs(rk(cards[0]) - rk(cards[1])) <= 1;
+  return false;
+}
+function answerBar(name, step, act, label, cards){
   const Q = BUS_Q[step];
   return '<div class="who"><span><b>' + esc(name) + '</b> ' + label + '</span><span>Frage ' + (step + 1) + '/4</span></div>' +
-    '<div class="acts n' + Q.o.length + '">' + Q.o.map(([v, l]) => '<button class="act' + (v === 'rot' || v === '♥' || v === '♦' ? ' redtxt' : '') + (Q.o.length === 2 ? ' hit' : '') + '" data-act="' + act + '" data-v="' + v + '">' + (l.length === 1 ? l + '\uFE0E' : l) + '</button>').join('') + '</div>';
+    '<div class="acts n' + Q.o.length + '">' + Q.o.map(([v, l]) => '<button class="act' + (v === 'rot' || v === '♥' || v === '♦' ? ' redtxt' : '') + (Q.o.length === 2 ? ' hit' : '') + '" data-act="' + act + '" data-v="' + v + '"' + (cards && busImpossible(step, v, cards) ? ' disabled' : '') + '>' + (l.length === 1 ? l + '\uFE0E' : l) + '</button>').join('') + '</div>';
 }
 function viewBus(){
   const B = busState();
@@ -1612,7 +1876,7 @@ function viewBus(){
     h += '<div class="phase">Runde 1: Karten verteilen</div>' + slotsHTML(hand) +
       '<div class="question">' + BUS_Q[hand.length].q + '</div><div class="sub center">Richtig bringt einen Schluck, falsch kostet einen Schluck</div>';
     h += stripSeats(B.turn, { lock:true, extra:showHands });
-    bar = S.give ? givePanel() : distPending() ? distPanel() : answerBar(p.name, hand.length, 'bus', 'bekommt Karten');
+    bar = S.give ? givePanel() : distPending() ? distPanel() : answerBar(p.name, hand.length, 'bus', 'bekommt Karten', hand);
   } else if(B.phase === 'pyr'){
     h += '<div class="phase">Runde 2: Pyramide</div><div class="pyr">';
     for(let r = 3; r >= 0; r--){
@@ -1641,11 +1905,11 @@ function viewBus(){
     h += Rd.cards.length || !Rd.fail ? slotsHTML(Rd.cards) : slotsHTML(Rd.fail.cards, true);
     h += '<div class="question">' + BUS_Q[Rd.cards.length].q + '</div><div class="sub center">Falsch kostet einen Schluck und es geht von vorne los. Noch ' + sipTxt(BUS_BEER - Rd.sips) + ' bis zur Erlösung, ' + Rd.deck.length + ' Karten im Deck.</div>';
     h += stripSeats(B.driver, { lock:true, noThrow:true, extra:showHands });
-    bar = S.give ? givePanel() : distPending() ? distPanel() : answerBar(p.name, Rd.cards.length, 'bus', 'fährt Bus');
+    bar = S.give ? givePanel() : distPending() ? distPanel() : answerBar(p.name, Rd.cards.length, 'bus', 'fährt Bus', Rd.cards);
   } else {
     const p = S.players[B.driver] || { name:'?' };
     h += '<div class="phase">Busfahrt beendet</div>' + slotsHTML(B.ride ? (B.made ? B.ride.cards : (B.ride.fail ? B.ride.fail.cards : B.ride.cards)) : []) +
-      '<div class="question ok">' + esc(p.name) + (B.made ? ' ist raus!' : B.why === 'beer' ? ' hat ein Bier im Bus getrunken und ist erlöst.' : ' ist erlöst, das Deck ist durch.') + '</div>' +
+      '<div class="question ok">' + esc(p.name) + (B.made ? ' ist raus!' : B.why === 'beer' ? ' hat ' + BUS_BEER + ' Schlücke im Bus getrunken und ist erlöst.' : ' ist erlöst, das Deck ist durch.') + '</div>' +
       busCounter(B.ride);
     h += stripSeats(-1, {});
     bar = S.give ? givePanel() : '<button class="primary" data-act="busNew">Neue Busfahrt</button>';
@@ -1683,8 +1947,8 @@ function otherRules(){
   const g = game();
   let r = '<h2>So wird gespielt</h2><ul>';
   if(g === 'roulette') r += '<li>Oben wählen, wer setzt, dann aufs Tableau tippen. Jeder setzt bis zu 6 Schlücke, verteilt auf beliebig viele Felder.</li><li>Rot, Schwarz, Gerade, Ungerade, 1–18, 19–36: Gewinn in Höhe des Einsatzes.</li><li>Dutzende und Kolonnen (2 : 1): doppelter Einsatz. Einzelne Zahl: zwölffacher Einsatz, ein Schluck reicht also für den Höchstgewinn.</li><li>Gewinne und Verluste einer Runde werden verrechnet, höchstens 12 Gewinn.</li><li>Bei der 0 verlieren alle, außer wer genau auf 0 gesetzt hat.</li>';
-  if(g === 'hilo') r += '<li>Reihum rät jeder, ob die nächste Karte höher oder tiefer ist. Ass ist hoch.</li><li>Richtig: Der Stapel wächst um eine Karte.</li><li>Falsch oder gleich: so viele Schlücke, wie Karten im Stapel liegen, höchstens 6. Danach fängt der Stapel neu an.</li><li>Wer „Gleich“ sagt und richtig liegt, gewinnt den doppelten Stapel, höchstens 12.</li>';
-  if(g === 'bus') r += '<li>Runde 1: Jeder bekommt vier Karten über vier Fragen: Rot oder Schwarz, höher oder tiefer, zwischen, daneben oder trifft, welches Symbol. Jede Frage bringt oder kostet einen Schluck.</li><li>Runde 2: Zehn Karten liegen als Pyramide. Nur hier gibt es mehr als einen Schluck. Wer beim Aufdecken den gleichen Wert hat, legt ab. Reihe 1: 1 Schluck trinken, Reihe 2: 2 Schlücke verteilen, Reihe 3: 3 Schlücke trinken, Reihe 4: 4 Schlücke trinken, jeweils pro Karte.</li><li>Runde 3: Wer die meisten Karten übrig hat, fährt Bus. Er muss alle vier Fragen hintereinander schaffen, mit den restlichen Karten des Decks. Jeder Fehler kostet einen Schluck, dann geht es von vorne los. Im Bus hat ein Bier 10 Schlücke: Nach einem Bier ist der Busfahrer erlöst, ebenso wenn das Deck durch ist. Während der Busfahrt kann niemand Runden schmeißen.</li><li>Frage 3: Zwischen, daneben oder trifft. „Trifft“ heißt, die Karte hat genau den Wert von Karte 1 oder 2.</li><li>Bei Höher oder tiefer zählt ein gleicher Wert als falsch. Ass ist hoch.</li><li>Haben mehrere gleich viele Karten übrig, wird gestochen: Jeder sagt Rot oder Schwarz. Liegt genau einer falsch, fährt er. Liegen mehrere falsch, stechen nur die weiter.</li>';
+  if(g === 'hilo') r += '<li>Reihum rät jeder, ob die nächste Karte höher oder tiefer ist. Ass ist hoch. Liegt ein Ass, geht nur Tiefer oder Gleich, liegt eine 2, nur Höher oder Gleich.</li><li>Richtig: Der Stapel wächst um eine Karte.</li><li>Falsch oder gleich: so viele Schlücke, wie Karten im Stapel liegen, höchstens 6. Danach fängt der Stapel neu an.</li><li>Wer „Gleich“ sagt und richtig liegt, gewinnt den doppelten Stapel, höchstens 12.</li>';
+  if(g === 'bus') r += '<li>Runde 1: Jeder bekommt vier Karten über vier Fragen: Rot oder Schwarz, höher oder tiefer, zwischen, daneben oder trifft, welches Symbol. Jede Frage bringt oder kostet einen Schluck.</li><li>Runde 2: Zehn Karten liegen als Pyramide. Nur hier gibt es mehr als einen Schluck. Wer beim Aufdecken den gleichen Wert hat, legt ab. Reihe 1: 1 Schluck trinken, Reihe 2: 2 Schlücke verteilen, Reihe 3: 3 Schlücke trinken, Reihe 4: 4 Schlücke verteilen, jeweils pro Karte.</li><li>Runde 3: Wer die meisten Karten übrig hat, fährt Bus. Er muss alle vier Fragen hintereinander schaffen, mit den restlichen Karten des Decks. Jeder Fehler kostet einen Schluck, dann geht es von vorne los. Nach 10 Schlücken im Bus ist der Busfahrer erlöst, ebenso wenn das Deck durch ist. Während der Busfahrt kann niemand Runden schmeißen.</li><li>Frage 3: Zwischen, daneben oder trifft. „Trifft“ heißt, die Karte hat genau den Wert von Karte 1 oder 2.</li><li>Bei Höher oder tiefer zählt ein gleicher Wert als falsch. Ass ist hoch. Unmögliche Antworten (höher als ein Ass, tiefer als eine 2, zwischen zwei Nachbarwerten) sind gesperrt.</li><li>Haben mehrere gleich viele Karten übrig, wird gestochen: Jeder sagt Rot oder Schwarz. Liegt genau einer falsch, fährt er. Liegen mehrere falsch, stechen nur die weiter.</li>';
   r += isKasse()
     ? '<li>Bierkasse: Gewinne gehen aufs Konto. Verluste zahlt das Konto bis auf einen Schluck. Ist das Konto voll, wird der Überschuss verteilt.</li>'
     : '<li>Gewinne werden an die anderen verteilt. Der Gewinner bestimmt, wer wie viel bekommt.</li>';
@@ -1698,6 +1962,23 @@ function switchHTML(){
     (ok ? '<p class="hint" style="margin:0 0 16px">Spieler, Biere und Konten bleiben erhalten.</p>' : '<p class="hint" style="margin:0 0 16px">Erst die laufende Runde beenden.</p>');
 }
 
+/* ---------- Gesten ---------- */
+document.addEventListener('touchstart', () => {}, { passive:true });   // aktiviert :active sofort auf iOS
+app.addEventListener('touchstart', e => {
+  if(e.touches.length !== 1 || !e.target.closest('.sheet')) return;
+  dragStart(e.touches[0].clientY, e.target);
+}, { passive:true });
+app.addEventListener('touchmove', e => { if(sheetCtl.drag) dragMove(e.touches[0].clientY, e); }, { passive:false });
+app.addEventListener('touchend', dragEnd);
+app.addEventListener('touchcancel', dragEnd);
+app.addEventListener('pointerdown', e => {
+  if(e.pointerType === 'touch' || !e.target.closest('.grab')) return;
+  dragStart(e.clientY, e.target);
+  if(sheetCtl.drag){ try{ e.target.setPointerCapture(e.pointerId); }catch(x){} }
+});
+app.addEventListener('pointermove', e => { if(e.pointerType !== 'touch' && sheetCtl.drag) dragMove(e.clientY, e); });
+app.addEventListener('pointerup', e => { if(e.pointerType !== 'touch') dragEnd(); });
+
 /* ---------- Eingaben ---------- */
 app.addEventListener('input', e => {
   const i = e.target.dataset ? e.target.dataset.name : undefined;
@@ -1707,6 +1988,7 @@ app.addEventListener('keydown', e => {
   if(e.key === 'Enter' && e.target.id === 'newName') handle('addPlayer', null, e);
 });
 app.addEventListener('click', e => {
+  if(ui.suppressUntil && Date.now() < ui.suppressUntil) return;
   const btn = e.target.closest('[data-act]');
   if(!btn) return;
   if(btn.classList.contains('scrim') && e.target.closest('[data-stop]')) return;
@@ -1759,6 +2041,7 @@ function handle(a, btn, e){
       if(ui.armed === 'nb' + p.id){ ui.armed = null; newBeer(p); save(); } else ui.armed = 'nb' + p.id;
       render(); break;
     case 'rm':
+      if(S.give || (S.dist && S.distIdx < S.dist.length)) break;
       if(ui.armed === 'rm' + p.id){
         S.gone = (S.gone || 0) + p.drunk; S.players.splice(pi, 1); ui.armed = null;
         if(S.hl && S.hl.turn > pi) S.hl.turn--;
@@ -1792,8 +2075,8 @@ function handle(a, btn, e){
     case 'distAuto': distRandom(); save(); render(); break;
     case 'distDone': distDone(); break;
     case 'next': nextRound(); break;
-    case 'menu': ui.menu = true; render(); break;
-    case 'closeMenu': ui.menu = false; render(); break;
+    case 'menu': ui.menu = true; ui.sheetIn = true; render(); break;
+    case 'closeMenu': closeSheet(0); break;
     case 'install':
       if(installEvt){ installEvt.prompt(); installEvt.userChoice.finally(() => { installEvt = null; render(); }); }
       break;
